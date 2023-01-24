@@ -41,7 +41,12 @@ background: #c98342;
 border: 2px solid #c98342;
 }
 
-#infoButton {
+#info {
+background-color: transparent;
+border: 0px;
+}
+
+#gear {
 background-color: transparent;
 border: 0px;
 }

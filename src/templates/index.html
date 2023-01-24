@@ -4,6 +4,9 @@
     {{ super() }}
 {% endblock %}
 {% block content %}
+    <div>
+        <button class="btn" id="info"><i class="fa-sharp fa-solid fa-circle-info"></i></button>
+    </div>
     <div id="container">
         <h1>Boerenbridge</h1>
         <div>
@@ -11,6 +14,9 @@
             <button class="btn" id="joinButton">Join Game</button>
         </div>
     </div>
+{% endblock %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
 {% endblock %}
 {% block footer %}
     <div id="footerContainer">
