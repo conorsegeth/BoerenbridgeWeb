@@ -9,3 +9,5 @@ def render():
 @app.route('/admin')
 def admin():
     return render_template('admin.html')
+
+print("bruh")
