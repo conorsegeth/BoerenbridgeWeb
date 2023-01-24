@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %} Boerenbridge online {% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div>
+        <button class="btn" id="infoButton"><i class="fa-sharp fa-solid fa-gear"></i></button>
+    </div>
+    <div id="container">
+        <h1>Boerenbridge</h1>
+        <div>
+            <input type="text" id="gameCode" placeholder="Create game code">
+            <button class="btn" id="joinButton">Create Game</button>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% block head %}
+        <title>{% block title %}{% endblock %}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/static/style.css">
+        <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+        {% endblock %}
+    </head>
+    <body>
+        <div>
+            <button class="btn" id="infoButton"><i class="fa-sharp fa-solid fa-circle-info"></i></button>
+        </div>
+        {% block content %}
+        {% endblock %}
+    </body>
+    <footer>
+        {% block footer %}
+        {% endblock %}
+    </footer>
+</html>

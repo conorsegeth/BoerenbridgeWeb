@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %} Boerenbridge online {% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div id="container">
+        <h1>Boerenbridge</h1>
+        <div>
+            <input type="text" id="gameCode" placeholder="Enter game code">
+            <button class="btn" id="joinButton">Join Game</button>
+        </div>
+    </div>
+{% endblock %}
+{% block footer %}
+    <div id="footerContainer">
+        <a href="/admin">
+            <button class="btn" id="createButton">Create a Game </button>
+        </a>
+    </div>
+{% endblock %}

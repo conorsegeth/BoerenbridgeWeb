@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css?family=Nabla');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
+
+html {
+background-color: #35654d
+}
+
+h1 {
+font-family: 'Nabla';
+font-size: 80px;
+}
+
+#container {
+text-align: center;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-direction: column;
+height: 80vh;
+}
+
+
+input[type=text] {
+width: 300px;
+padding: 10px 8px;
+border: 2px solid #FFA756;
+border-radius: 5px;
+font-family: Montserrat;
+}
+
+button {
+padding: 10px 8px;
+border: 2px solid #FFA756;
+background: #FFA756;
+border-radius: 5px;
+font-family: Montserrat;
+}
+
+.btn:hover {
+background: #c98342;
+border: 2px solid #c98342;
+}
+
+#infoButton {
+background-color: transparent;
+border: 0px;
+}
+
+i {
+font-size: 2em;
+color: #FFA756;
+}
+i:hover {
+color: #c98342;
+}
+
+#footerContainer {
+position: absolute;
+right: 30px;
+text-align: right;
+display: flex;
+align-items: center;
+justify-content: right;
+}
