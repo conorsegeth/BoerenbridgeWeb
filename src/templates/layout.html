@@ -14,8 +14,7 @@
     <body>
         {% block content %}
         {% endblock %}
-        {% block scripts %}
-        {% endblock %}
+        <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
     </body>
     <footer>
         {% block footer %}

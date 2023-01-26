@@ -3,6 +3,7 @@
 {% block head %}
     {{ super() }}
 {% endblock %}
+
 {% block content %}
     <div id="infoSidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -33,7 +34,6 @@
                         <li style="margin-left:2em">The difference between their actual won tricks and their stated tricks.</li>
                     </ul>
                 </li>
-                
             </ul>
         </div>
     </div>
@@ -48,9 +48,7 @@
         </div>
     </div>
 {% endblock %}
-{% block scripts %}
-    <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
-{% endblock %}
+
 {% block footer %}
     <div id="footerContainer">
         <a href="/admin">

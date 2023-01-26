@@ -4,8 +4,40 @@
     {{ super() }}
 {% endblock %}
 {% block content %}
+    <div id="infoSidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <div id="sidebarContent">
+            <h1 id="sidebarHeader">Rules</h1>
+            <ul>
+                <li>Boerenbridge is played with a few or more players using a standard deck of 52 cards.</li>
+                <li>The game is played in several rounds, with the number of cards dealt decreasing by one after each round.</li>
+                <li>The first round is played with 13 cards per player, the second round with 12 cards per player and so on, until the final round where only 1 card per player is dealt.</li>
+                <li>The player who starts the first trick of each round is the player who follows the dealer, and play proceeds clockwise.</li>
+                <li>Each player must follow suit if they can, and the highest card of the suit led wins the trick. If a player cannot follow suit, they may play any card.</li>
+                <li>If a player can not follow suit, they may also play a trump card if they have one. The highest trump card will win the trick.</li>
+                <li>Before the start of the round, players state how many tricks they think they can take. Each player must try to take their stated number of tricks, while preventing the other players from doing so.</li>
+                <li>Points are awarded at the end of each round. If you won your stated number of tricks, you win points. Otherwise, you lose points. The player with the most points at the end of the game wins.</li>
+                <li>The strategy and gameplay changes as the number of cards in the game decreases.</li>
+                <li>Lastly, enjoy and get destroyed by my bot!</li>
+            </ul>
+            <h1 id="sidebarHeader">Scoring</h1>
+            <ul>
+                <li>When a player successfully wins the number of tricks they stated, they are awarded:
+                    <ul style="padding-bottom: 0;">
+                        <li style="margin-left:2em">10 points,</li>
+                        <li style="margin-left:2em">An additional point for each trick they won.</li>
+                    </ul>
+                </li>
+                <li>When a player doesn't win the number of tricks they stated, they are deducted:
+                    <ul style="padding-bottom: 0;">
+                        <li style="margin-left:2em">The difference between their actual won tricks and their stated tricks.</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
     <div>
-        <button class="btn" id="info"><i class="fa-sharp fa-solid fa-circle-info"></i></button>
+        <button class="btn" id="info" onclick="openNav()"><i class="fa-sharp fa-solid fa-circle-info"></i></button>
         <button class="btn" id="gear"><i class="fa-sharp fa-solid fa-gear"></i></button>
     </div>
     <div id="container">
