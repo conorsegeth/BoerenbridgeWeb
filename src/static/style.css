@@ -8,6 +8,7 @@ html {
 h1 {
     font-family: 'Nabla';
     font-size: 80px;
+    margin: 25px;
 }
 
 #container {
@@ -16,7 +17,7 @@ h1 {
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    height: 82vh;
+    height: 80vh;
 }
 
 
@@ -97,7 +98,7 @@ i:hover {
     font-size: 60px;
 }
 
-.sidebar .closebtn {
+.closebtn {
     position: absolute;
     top: 10px;
     right: 25px;
@@ -111,3 +112,24 @@ li {
     color: rgb(220, 220, 220);
     padding: 5px 0px;
 }
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 25%;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(49, 49, 49);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; 
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; 
+  }
+

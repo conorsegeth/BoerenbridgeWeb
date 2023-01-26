@@ -36,9 +36,17 @@
             </ul>
         </div>
     </div>
+    <div id="settingsModal" class="modal">
+        <!-- maybe change to save button instead of close button -->
+        <a href="javascript:void(0)" class="closebtn" onclick="closeWin()">&times;</a>
+        <!-- Header here -->
+        <div class="modalcontent">
+            <!-- Content when I know what to put here -->
+        </div>
+    </div>
     <div>
         <button class="btn" id="info" onclick="openNav()"><i class="fa-sharp fa-solid fa-circle-info"></i></button>
-        <button class="btn" id="gear"><i class="fa-sharp fa-solid fa-gear"></i></button>
+        <button class="btn" id="gear" onclick="openWin()"><i class="fa-sharp fa-solid fa-gear"></i></button>
     </div>
     <div id="container">
         <h1>Boerenbridge</h1>
