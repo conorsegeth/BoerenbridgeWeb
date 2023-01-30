@@ -35,6 +35,7 @@ button {
     background: #FFA756;
     border-radius: 5px;
     font-family: Montserrat;
+    cursor: pointer;
 }
 
 .btn:hover {
