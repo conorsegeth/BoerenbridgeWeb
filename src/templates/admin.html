@@ -49,9 +49,17 @@
         <button class="btn" id="gear" onclick="openWin()"><i class="fa-sharp fa-solid fa-gear"></i></button>
     </div>
     <div id="container">
-        <h1>Boerenbridge</h1>
+        <a href="{{ url_for('index')}}"><h1>Boerenbridge</h1></a>
         <div>
-            <input type="text" id="gameCode" placeholder="Create game code">
-            <button class="btn" id="joinButton">Create Game</button>
+            <div>
+                <input type="text" id="player-name" placeholder="Enter your name">
+            </div>
+            <form id="create-room-form">
+                <input type="text" id="room-id-input" placeholder="Create game code">
+                <input type="submit" class="btn" value="Create Game">
+            </form>
         </div>
+{% endblock %}
+{% block scripts %}
+        <script src="{{ url_for('static', filename='scripts/admin.js') }}"></script>
 {% endblock %}
