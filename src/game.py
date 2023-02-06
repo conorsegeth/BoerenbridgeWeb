@@ -1,13 +1,17 @@
 from collections.abc import Iterable
 
 class Player:
-    def __init__(self, socket_id: str, username: str, player_number: int, is_admin=False) -> None:
-        self.socket_id = socket_id
+    def __init__(self, session_id: str, username: str, player_number: int, is_admin=False) -> None:
+        self.session_id = session_id
         self.username = username
         self.player_number = player_number
         self.is_admin = is_admin
 
 class GameRoom:
-    def __init__(self, room_id: str, players: Iterable[Player]) -> None:
+    def __init__(self, room_id: str) -> None:
         self.room_id = room_id
-        self.players = players
+        self.players = {}
+        self.state = "waiting for players"
+
+    def add_player(self, player: Player) -> None:
+        self.players[player.session_id] = player

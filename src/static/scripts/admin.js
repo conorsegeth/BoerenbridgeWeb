@@ -7,5 +7,6 @@ document.getElementById("create-room-form").addEventListener("submit", function(
 
     if (name && room_id) {
         socket.emit("create room", { room_id: room_id, admin_name: name });
+        window.location = window.location.pathname + "/" + room_id
     }
 });
