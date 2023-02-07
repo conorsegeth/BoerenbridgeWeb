@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, abort
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 from game import GameRoom, Player
 
 app = Flask(__name__)
@@ -47,23 +47,30 @@ def create_game(data):
     socketio.emit("update room", {"room_id": room_id, "players": game_room.players, "state": game_room.state})
 
 @socketio.on("join room")
-def join_room(data):
+def join_game(data):
     room_id = data["room_id"]
-    username = data["name"]
+    username = data["username"]
 
-    game_room = None
-    for room in game_rooms:
-        if room.room_id == room_id:
-            game_room = room
-    assert game_room is not None
+    print(data)
 
-    num_players = len(game_room.players)
-    player = Player(request.sid, username, num_players + 1)
-    room.add_player(player)
-  
-    join_room(room_id)
+    current_room_id = None
+    if game_rooms:
+        for room in game_rooms:
+            if room == room_id:
+                current_room_id = room
 
-    socketio.emit("update room", {"room_id": room_id, "players": game_room.players, "state": game_room.state})
+    if current_room_id:
+        current_room = game_rooms[current_room_id]
+        num_players = len(current_room.players)
+        player = Player(request.sid, username, num_players + 1)
+        current_room.add_player(player)
+    
+        join_room(current_room_id)
+
+        socketio.emit("update room", {"room_id": current_room_id, "players": current_room.players, "state": current_room.state})
+        socketio.emit("exists", {"esists": True}, to=request.sid)
+    else:
+        socketio.emit("nonexistent", {"nonexistent": True}, to=request.sid)
 
 
 @socketio.on("start game")

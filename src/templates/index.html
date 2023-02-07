@@ -45,15 +45,17 @@
         <div>
             <input type="text" id="player-name" placeholder="Enter your name">
         </div>
-        <form id="join-room-form">
-            <div>
+        <div>
+            <form id="join-room-form">
                 <input type="text" id="room-id-input" placeholder="Enter game code">
                 <input type="submit" class="btn" value="Join Game">
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 {% endblock %}
-
+{% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/join.js') }}"></script>
+{% endblock %}
 {% block footer %}
     <div id="footerContainer">
         <a href="/admin">
