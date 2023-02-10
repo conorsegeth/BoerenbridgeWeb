@@ -10,15 +10,12 @@ class Player:
 class GameRoom:
     def __init__(self, room_id: str) -> None:
         self.room_id = room_id
-        self.players = {}
+        self.playerIDs = []
+        self.players = []
         self.state = "waiting for players"
 
     def add_player(self, player: Player) -> None:
-        self.players[player.session_id] = player
+        self.playerIDs.append(player.session_id)
+        self.players.append(player)
 
-    def get_player_session_ids(self):
-        session_ids = []
-        for sid in self.players:
-            session_ids.append(sid)
-        print(session_ids)
-        return session_ids
+

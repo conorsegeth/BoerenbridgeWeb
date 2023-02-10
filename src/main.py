@@ -22,7 +22,7 @@ def admin_start(room_id):
     else:
         abort(404)
 
-@app.route('/<room_id>')
+@app.route('/room/<room_id>')
 def room(room_id):
     if room_id in game_rooms:
         return room_id
@@ -37,41 +37,46 @@ def create_game(data):
     room_id = data["room_id"]
     admin_name = data["admin_name"]
 
-    player = Player(request.sid, admin_name, 1, is_admin=True)
-    game_room = GameRoom(room_id)
-    game_room.add_player(player)
-    game_rooms[room_id] = game_room
+    # Check if room already exists
+    exists = False
+    for room in game_rooms:
+        if room == room_id:
+            exists = True
 
-    join_room(room_id)
+    if exists:
+        socketio.emit("pre-existing", to=request.sid)
+    else:
+        player = Player(request.sid, admin_name, 1, is_admin=True)
+        game_room = GameRoom(room_id)
+        game_room.add_player(player)
+        game_rooms[room_id] = game_room
 
-    socketio.emit("update room", {"room_id": room_id, "players": game_room.players, "state": game_room.state})
+        join_room(room_id)
+
+        socketio.emit("update room", {"room_id": room_id, "players": game_room.playerIDs, "state": game_room.state})
+        socketio.emit("exists", to=request.sid)
 
 @socketio.on("join room")
 def join_game(data):
     room_id = data["room_id"]
     username = data["username"]
 
-    print(data)
-
-    current_room_id = None
-    if game_rooms:
-        for room in game_rooms:
-            if room == room_id:
-                current_room_id = room
-
-    if current_room_id:
-        current_room = game_rooms[current_room_id]
-        num_players = len(current_room.players)
-        player = Player(request.sid, username, num_players + 1)
-        current_room.add_player(player)
+    # Check if room exists
+    exists = False
+    for room in game_rooms:
+        if room == room_id:
+            exists = True
     
-        join_room(current_room_id)
+    if exists:
+        current_room = game_rooms[room_id]
+        player = Player(request.sid, username, len(current_room.playerIDs) + 1)
+        current_room.add_player(player)
 
-        socketio.emit("update room", {"room_id": current_room_id, "players": current_room.players, "state": current_room.state})
-        socketio.emit("exists", {"esists": True}, to=request.sid)
+        join_room(room_id)
+
+        socketio.emit("exists", to=request.sid)
     else:
-        socketio.emit("nonexistent", {"nonexistent": True}, to=request.sid)
-
+        socketio.emit("nonexistent", to=request.sid)
 
 @socketio.on("start game")
 def start_game(data):

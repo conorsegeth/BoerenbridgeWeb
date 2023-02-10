@@ -116,6 +116,12 @@ i:hover {
     font-size: 60px;
 }
 
+p {
+    font-family: Montserrat;
+    font-size: 15px;
+    color: rgb(220, 220, 220)
+}
+
 a {
     text-decoration: none;
 }

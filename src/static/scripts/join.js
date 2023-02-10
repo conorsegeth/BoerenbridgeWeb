@@ -14,12 +14,10 @@ document.getElementById("join-room-form").addEventListener("submit", function(ev
 });
 
 socket.on("exists", function(data) {
-    if (data) {
-        alert("That game EXISTSTSTTS")
-    }
+    window.location.href = window.location.href + "room" + "/" + room_id
+    
 });
 socket.on("nonexistent", function(data) {
-    if (data) {
-        alert("That game does not exist.")
-    }
+    alert("That game does not exist.")
+
 });
