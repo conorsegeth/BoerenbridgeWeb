@@ -1,4 +1,4 @@
-var socket = io()
+var socket = io();
 
 var username = null;
 var room_id = null;
@@ -13,11 +13,14 @@ document.getElementById("join-room-form").addEventListener("submit", function(ev
     }
 });
 
-socket.on("exists", function(data) {
-    window.location.href = window.location.href + "room" + "/" + room_id
-    
+socket.on("exists", function() {
+    //window.location.href = window.location.href + "room" + "/" + room_id
+    var new_url = '/room/' + room_id
 });
-socket.on("nonexistent", function(data) {
+socket.on("nonexistent", function() {
     alert("That game does not exist.")
-
 });
+
+setInterval(function() {
+    socket.emit("test")
+}, 1000);

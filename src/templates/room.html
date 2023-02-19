@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %} Boerenbridge online {% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div>
+        <button class="btn" id="info" onclick="openNav()"><i class="fa-sharp fa-solid fa-circle-info"></i></button>
+    </div>
+    <div id="container">
+        <h2>Waiting for players...</h2>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/room.js') }}"></script>
+{% endblock %}
