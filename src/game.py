@@ -11,9 +11,10 @@ class Player:
         return self.username
 
 class GameRoom:
-    def __init__(self, room_id: str) -> None:
+    def __init__(self, room_id: str, settings: dict) -> None:
         self.room_id = room_id
         self.players = {}
+        self.settings = settings
         self.state = "waiting for players"
 
     def add_player(self, player: Player) -> None:

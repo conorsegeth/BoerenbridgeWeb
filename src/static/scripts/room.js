@@ -31,7 +31,3 @@ socket.on("usernames", function(data) {
         }
     });
 });
-
-window.onbeforeunload = function() {
-    socket.emit("bye bye");
-}

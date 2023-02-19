@@ -40,6 +40,11 @@ def room(room_id):
 @socketio.on("create room")
 def create_game(data):
     room_id = data["room_id"]
+    num_players = int(data["num_players"])
+    bot_type = None if data["bot_type"] == "None" else data["bot_type"]
+    deck_size = data["deck_size"]
+    step_size = data["step_size"]
+    reverse = data["reverse"]
 
     # Check if room already exists
     exists = False
@@ -47,8 +52,15 @@ def create_game(data):
         if room == room_id:
             exists = True
 
-    room = GameRoom(room_id)
+    room = GameRoom(room_id, {
+        "num_players": num_players, 
+        "bot_type": bot_type,
+        "deck_size": deck_size,
+        "step_size": step_size,
+        "reverse": reverse
+        })
     game_rooms[room_id] = room
+    print("settings", room.settings)
     
     if exists:
         socketio.emit("pre-existing", to=request.sid)
@@ -63,6 +75,10 @@ def join_game(data):
     exists = False
     for room in game_rooms:
         if room == room_id:
+            print(len(game_rooms[room].players), game_rooms[room].settings["num_players"])
+            if len(game_rooms[room].players) >= game_rooms[room].settings["num_players"]:
+                socketio.emit("full", to=request.sid)
+                return
             exists = True
     
     if exists:
@@ -103,9 +119,10 @@ def start_game(data):
 def player_move(data):
     pass
 
+# Somehow make it recognised who disconnected and stop that game
 @socketio.on("disconnect")
-def handle_disconnect(data):
-    print("Player disconnected", data)
+def handle_disconnect():
+    pass
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

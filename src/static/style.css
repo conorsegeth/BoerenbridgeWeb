@@ -13,7 +13,7 @@ h1 {
 
 h2 {
     font-family: 'Nabla';
-    font-size: 50px;
+    font-size: 60px;
     margin: 25px;
 }
 
@@ -39,32 +39,32 @@ input[type=text] {
     width: 396px;
 }
 
-#room-id-input {
+#room-id-input1 {
+    width: 299px;
+}
+
+#room-id-input2 {
     width: 284px;
 }
 
-button {
+.btn {
     padding: 10px 8px;
     border: 2px solid #FFA756;
     background: #FFA756;
     border-radius: 5px;
     font-family: Montserrat;
     cursor: pointer;
+}
+
+#start-btn {
+    font-size: 18px;
+    margin-top: 50px;
 }
 
 .btn:hover {
     background: #c98342;
     border: 2px solid #c98342;
 }
-
-input[type=submit] {
-    padding: 10px 8px;
-    border: 2px solid #FFA756;
-    background: #FFA756;
-    border-radius: 5px;
-    font-family: Montserrat;
-    cursor: pointer;
-}  
 
 #info {
     background-color: transparent;
@@ -122,7 +122,41 @@ i:hover {
     font-size: 60px;
 }
 
+#modalContent {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+label {
+    padding-right: 10px;
+}
+
+input[type=number] {
+    padding: 4px 5px;
+    border: 2px solid #FFA756;
+    border-radius: 5px;
+    font-family: Montserrat;
+}
+
+input[type=reset] {
+    margin-left: 40%;
+    margin-top: 50px;
+}
+
+select {
+    padding: 2px 4px;
+    border: 2px solid #FFA756;
+    border-radius: 5px;
+}
+
 p {
+    font-family: Montserrat;
+    font-size: 20px;
+    color: rgb(220, 220, 220)
+}
+
+p.admin-reminder {
     font-family: Montserrat;
     font-size: 15px;
     color: rgb(220, 220, 220)

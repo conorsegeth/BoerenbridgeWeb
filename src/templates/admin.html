@@ -8,8 +8,40 @@
         <!-- maybe change to save button instead of close button -->
         <a href="javascript:void(0)" class="closebtn" onclick="closeWin()">&times;</a>
         <!-- Header here -->
-        <div class="modalcontent">
-            <!-- Content when I know what to put here -->
+        <div id="modalContent">
+            <h2>Settings</h2>
+            <form>
+                <p>
+                    <label for="num=players">Number of players (3-7):</label> 
+                    <input type="number" id="num-players" name="num-players" min="3" max="7" value="4">
+                </p>
+                <p>
+                    <label for="bot-type">Bot Type:</label>
+                    <select id="bot-type" name="bot-type">
+                        <option value="None" selected>None</option>
+                        <!-- Add bots here as i make them -->
+                    </select>
+                </p>
+                <p>
+                    <label for="deck-size">Size of starting deck:</label>
+                    <select id="deck-size" name="deck-size">
+                        <option value="full" selected>Full Deck</option>
+                        <option value="three-quarter">3/4 Deck</option>
+                        <option value="half">Half Deck</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="step-size">Step size between hands:</label>
+                    <input type="number" id="step-size" name="step-size" min="1" max="2" value="1">
+                </p>
+                <p>
+                    <label for="reverse">Go back up from 1:</label>
+                    <input type="checkbox" id="reverse" name="reverse" value="1">
+                </p>
+                <p>
+                    <input type="reset" class="btn">
+                </p>
+            </form>
         </div>
     </div>
     <div>
@@ -23,11 +55,11 @@
                 <input type="text" id="player-name" placeholder="Enter your name">
             </div>
             <form id="create-room-form">
-                <input type="text" id="room-id-input" placeholder="Create game code">
+                <input type="text" id="room-id-input2" placeholder="Create game code">
                 <input type="submit" class="btn" value="Create Game">
             </form>
             <div>
-                <p>Change game settings with the icon in the top left!</p>
+                <p class="admin-reminder">Change game settings with the icon in the top left!</p>
             </div>
         </div>
     </div>

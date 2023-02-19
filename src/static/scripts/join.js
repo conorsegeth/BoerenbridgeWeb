@@ -6,7 +6,7 @@ var room_id = null;
 document.getElementById("join-room-form").addEventListener("submit", function(event) {
     event.preventDefault()
     username = document.getElementById("player-name").value;
-    room_id = document.getElementById("room-id-input").value;
+    room_id = document.getElementById("room-id-input1").value;
 
     if (username && room_id) {
         socket.emit("join room", { room_id: room_id, username: username });
