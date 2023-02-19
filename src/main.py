@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, abort, session
+from flask import Flask, render_template, request, abort
 from flask_socketio import SocketIO, join_room
 from game import GameRoom, Player
-import os, uuid
+import os
 
 SECRET_KEY = os.urandom(24)
 
@@ -30,26 +30,16 @@ def admin_start(room_id):
 @app.route('/room/<room_id>')
 def room(room_id):
     if room_id in game_rooms:
-        return room_id
+        return render_template('room.html')
     else:
         abort(404)
 
 
 # SOCKET IO STUFF
 
-@socketio.on('connect')
-def handle_connect():
-    user_id = str(uuid.uuid4())
-    session['user_id'] = user_id
-
-@socketio.on('test')
-def testt():
-    print(session.get('user_id'))
-
 @socketio.on("create room")
 def create_game(data):
     room_id = data["room_id"]
-    admin_name = data["admin_name"]
 
     # Check if room already exists
     exists = False
@@ -57,24 +47,17 @@ def create_game(data):
         if room == room_id:
             exists = True
 
+    room = GameRoom(room_id)
+    game_rooms[room_id] = room
+    
     if exists:
         socketio.emit("pre-existing", to=request.sid)
     else:
-        player = Player(session.get('user_id'), admin_name, 1, is_admin=True)
-        game_room = GameRoom(room_id)
-        game_room.add_player(player)
-        game_rooms[room_id] = game_room
-
-        session['room_id'] = room_id
-        join_room(room_id)
-
         socketio.emit("exists", to=request.sid)
-        socketio.emit("update room", {"room_id": room_id, "players": game_room.get_player_uids(), "state": game_room.state})
 
 @socketio.on("join room")
 def join_game(data):
     room_id = data["room_id"]
-    username = data["username"]
 
     # Check if room exists
     exists = False
@@ -83,42 +66,34 @@ def join_game(data):
             exists = True
     
     if exists:
-        current_room = game_rooms[room_id]
-        player = Player(request.sid, username, len(current_room.players) + 1)
-        current_room.add_player(player)
-
-        session['room_id'] = room_id
-        join_room(room_id)
-
         socketio.emit("exists", to=request.sid)
     else:
         socketio.emit("nonexistent", to=request.sid)
 
-@socketio.on("players request")
-def send_player_names():
-    playerID = session.get('user_id')
+@socketio.on("joined")
+def handle_join(data):
+    room_id = data["room_id"]
+    username = data["username"]
 
-    room_id = None
-    player_names = []
-
-    # Get room id attached to player and use to send updates about connected players
-    for roomid in game_rooms:
-        current_room = game_rooms[roomid]
-        print(playerID, current_room.get_player_uids())
-        if playerID in current_room.get_player_uids():
-            room_id = current_room.room_id
-            
-            # Put player usernames in list
-            for player in current_room.players:
-                player_names.append(current_room.players[player].username)
-
-
-
-    # Handle when this doesn't work  ??
-    if not room_id or not player_names:
-        pass
+    room = game_rooms[room_id]
+    if len(room.players) == 0:
+        player = Player(request.sid, username, 1, is_admin=True)
     else:
-        socketio.emit("player names", {"usernames": player_names}, to=request.sid)
+        player = Player(request.sid, username, len(room.players) + 1)
+
+    join_room(room_id)
+    room.add_player(player)
+
+@socketio.on('usernames request')
+def send_player_names(data):
+    room_id = data["room_id"]
+
+    usernames = []
+    for player_id in game_rooms[room_id].players:
+        player = game_rooms[room_id].players[player_id]
+        usernames.append(player.username)
+    
+    socketio.emit("usernames", {"usernames": usernames}, to=room_id)
 
 @socketio.on("start game")
 def start_game(data):
@@ -127,6 +102,10 @@ def start_game(data):
 @socketio.on("player move")
 def player_move(data):
     pass
+
+@socketio.on("disconnect")
+def handle_disconnect(data):
+    print("Player disconnected", data)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

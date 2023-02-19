@@ -10,17 +10,24 @@ document.getElementById("join-room-form").addEventListener("submit", function(ev
 
     if (username && room_id) {
         socket.emit("join room", { room_id: room_id, username: username });
+        document.cookie = `username=${username}; path=/`;
     }
 });
 
 socket.on("exists", function() {
     //window.location.href = window.location.href + "room" + "/" + room_id
     var new_url = '/room/' + room_id
+    window.location.replace(new_url)
 });
+
 socket.on("nonexistent", function() {
     alert("That game does not exist.")
 });
 
-setInterval(function() {
-    socket.emit("test")
-}, 1000);
+socket.on("full", function() {
+    alert("That game is full.")
+});
+
+// setInterval(function() {
+//     socket.emit("test")
+// }, 1000);
