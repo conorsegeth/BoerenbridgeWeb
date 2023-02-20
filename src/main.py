@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, abort
-from flask_socketio import SocketIO, join_room
+from flask_socketio import SocketIO, join_room, leave_room
 from game import GameRoom, Player
 import os
 
@@ -60,7 +60,6 @@ def create_game(data):
         "reverse": reverse
         })
     game_rooms[room_id] = room
-    print("settings", room.settings)
     
     if exists:
         socketio.emit("pre-existing", to=request.sid)
@@ -75,7 +74,6 @@ def join_game(data):
     exists = False
     for room in game_rooms:
         if room == room_id:
-            print(len(game_rooms[room].players), game_rooms[room].settings["num_players"])
             if len(game_rooms[room].players) >= game_rooms[room].settings["num_players"]:
                 socketio.emit("full", to=request.sid)
                 return
@@ -96,8 +94,8 @@ def handle_join(data):
         player = Player(request.sid, username, 1, is_admin=True)
     else:
         player = Player(request.sid, username, len(room.players) + 1)
+    leave_room()
 
-    join_room(room_id)
     room.add_player(player)
 
 @socketio.on('usernames request')
@@ -120,9 +118,11 @@ def player_move(data):
     pass
 
 # Somehow make it recognised who disconnected and stop that game
-@socketio.on("disconnect")
-def handle_disconnect():
+@socketio.on("bye")
+def handle_disconnect(data):
+    room_id = data["room_id"]
     pass
+    
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
