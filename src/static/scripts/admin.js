@@ -11,17 +11,15 @@ document.getElementById("create-room-form").addEventListener("submit", function(
     if (username && room_id) {
         document.cookie = `username=${username}; path=/`;
 
-        var num_players = document.getElementById("num-players").value;
+        var max_players = document.getElementById("max-players").value;
         var bot_type = document.getElementById("bot-type").value;
-        var deck_size = document.getElementById("deck-size").value;
         var step_size = document.getElementById("step-size").value;
         var reverse = document.getElementById("reverse").checked;
 
         socket.emit("create room", { 
             room_id: room_id, 
-            num_players: num_players, 
+            max_players: max_players, 
             bot_type: bot_type, 
-            deck_size: deck_size, 
             step_size: step_size,
             reverse: reverse,
         });

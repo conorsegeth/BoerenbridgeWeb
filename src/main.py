@@ -40,9 +40,8 @@ def room(room_id):
 @socketio.on("create room")
 def create_game(data):
     room_id = data["room_id"]
-    num_players = int(data["num_players"])
+    max_players = int(data["max_players"])
     bot_type = None if data["bot_type"] == "None" else data["bot_type"]
-    deck_size = data["deck_size"]
     step_size = data["step_size"]
     reverse = data["reverse"]
 
@@ -53,9 +52,8 @@ def create_game(data):
             exists = True
 
     room = GameRoom(room_id, {
-        "num_players": num_players, 
+        "max_players": max_players, 
         "bot_type": bot_type,
-        "deck_size": deck_size,
         "step_size": step_size,
         "reverse": reverse
         })
@@ -74,7 +72,7 @@ def join_game(data):
     exists = False
     for room in game_rooms:
         if room == room_id:
-            if len(game_rooms[room].players) >= game_rooms[room].settings["num_players"]:
+            if len(game_rooms[room].players) >= game_rooms[room].settings["max_players"]:
                 socketio.emit("full", to=request.sid)
                 return
             exists = True
@@ -94,9 +92,17 @@ def handle_join(data):
         player = Player(request.sid, username, 1, is_admin=True)
     else:
         player = Player(request.sid, username, len(room.players) + 1)
-    leave_room()
 
+    join_room(room_id)
     room.add_player(player)
+
+    socketio.emit(
+        "settings", {
+            "max_players": game_rooms[room_id].settings["max_players"],
+            "bot_type": game_rooms[room_id].settings["bot_type"],
+            "step_size": game_rooms[room_id].settings["step_size"],
+            "reverse": game_rooms[room_id].settings["reverse"]
+            }, to=room_id)
 
 @socketio.on('usernames request')
 def send_player_names(data):
@@ -109,9 +115,16 @@ def send_player_names(data):
     
     socketio.emit("usernames", {"usernames": usernames}, to=room_id)
 
-@socketio.on("start game")
-def start_game(data):
-    pass 
+@socketio.on("attempt start")
+def attempt_start(data):
+    room_id = data["room_id"]
+    username = data["username"]
+
+    if game_rooms[room_id].players[request.sid].is_admin == True:
+        socketio.emit("start game", to=room_id)
+        game_rooms[room_id].start_game()
+    else:
+        socketio.emit("not admin", to=request.sid)
 
 @socketio.on("player move")
 def player_move(data):

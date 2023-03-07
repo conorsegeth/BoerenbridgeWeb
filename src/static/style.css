@@ -217,3 +217,30 @@ li.player-list-items {
     margin-top: 1px;
     text-align: center;
 }
+
+#item1 { grid-area: player_info; }
+#item2 { grid-area: turn; }
+#item3 { grid-area: next_up; }
+#item4 { grid-area: played_cards; }
+#item5 { grid-area: leaderboard; }
+#item6 { grid-area: cards; }
+#item7 { grid-area: got; }
+
+#grid-container {
+    display: none;
+    height: 90vh;  
+    grid-template-areas: 
+        'player_info turn turn turn turn next_up'
+        'player_info played_cards played_cards played_cards played_cards next_up'
+        'leaderboard played_cards played_cards played_cards played_cards next_up'
+        'leaderboard cards cards cards cards got';
+    gap: 10px;
+    background-color: #2196F3;
+    padding: 10px;
+}
+#grid-container > div {
+    display: flex;
+    padding: 20px 0;
+    font-size: 30px;
+    background-color: rgba(255, 255, 255, 0.8);
+  }

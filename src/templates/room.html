@@ -16,6 +16,15 @@
             <button class="btn" id="start-btn">Start</button>
         </div>
     </div>
+    <div id="grid-container">
+        <div class="grid-item" id="item1">Player_Info</div>
+        <div class="grid-item" id="item2">Turn</div>
+        <div class="grid-item" id="item3">Next_Up</div>
+        <div class="grid-item" id="item4">Played_Cards</div>
+        <div class="grid-item" id="item5">Leaderboard</div>
+        <div class="grid-item" id="item6">Cards</div>
+        <div id="item7">Got</div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <script src="{{ url_for('static', filename='scripts/room.js') }}"></script>
