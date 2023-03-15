@@ -67,11 +67,14 @@ input[type=text] {
 }
 
 #info {
+    position: absolute;
     background-color: transparent;
     border: 0px;
 }
 
 #gear {
+    position: fixed;
+    left: 50px;
     background-color: transparent;
     border: 0px;
 }
@@ -218,29 +221,228 @@ li.player-list-items {
     text-align: center;
 }
 
-#item1 { grid-area: player_info; }
-#item2 { grid-area: turn; }
-#item3 { grid-area: next_up; }
-#item4 { grid-area: played_cards; }
-#item5 { grid-area: leaderboard; }
+#item1 { grid-area: player_info; padding: 20px 0;}
+#item2 { grid-area: turn; padding: 20px 0;}
+#item3 { grid-area: next_up; padding: 20px 0;}
+#item4 { grid-area: played_cards;}
+#item5 { grid-area: leaderboard; padding: 20px 0;}
 #item6 { grid-area: cards; }
-#item7 { grid-area: got; }
+#item7 { grid-area: got; padding: 20px 0;}
 
 #grid-container {
     display: none;
-    height: 90vh;  
+    height: 96vh;  
     grid-template-areas: 
         'player_info turn turn turn turn next_up'
         'player_info played_cards played_cards played_cards played_cards next_up'
         'leaderboard played_cards played_cards played_cards played_cards next_up'
         'leaderboard cards cards cards cards got';
+    grid-template-columns: 16% 16% 16% 16% 16% 16%;
+    grid-template-rows: 24% 24% 24% 24%;
     gap: 10px;
-    background-color: #2196F3;
     padding: 10px;
+    background-color: #0000FF;
+    justify-content: space-evenly;
 }
-#grid-container > div {
-    display: flex;
-    padding: 20px 0;
+
+.grid-item {
+    padding: 0 0;
     font-size: 30px;
-    background-color: rgba(255, 255, 255, 0.8);
-  }
+    background-color: #87CEEB;
+}
+
+h3 {
+    font-family: "Montserrat";
+    text-align: center;
+    margin: 5px;
+}
+
+h3#leaderboard-title {
+    font-size: 30px;
+}
+
+#scoreboard-container {
+    display: flex;
+}
+
+#scoreboard {
+    /* background-color: #ff5c5c; */
+    list-style: none;
+    width: 75%;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+    align-items: left;
+}
+
+li.scoreboard-names {
+    background-color: rgba(25, 25, 25, 0.25);
+    font-size: 22px;
+    padding-left: 15px;
+    height: 30px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#scoreboard-values {
+    /* background-color: #525252; */
+    list-style: none;
+    width: 25%;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+}
+
+li.scoreboard-values-values {
+    background-color: rgba(0,0,0, 0.25);
+    font-size: 22px;
+    height: 30px;
+    margin-bottom: 2px;
+    text-align: center;
+}
+
+#player-info-container {
+    display: flex;
+}
+
+#player-info-left {
+    list-style: none;
+    width: 60%;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+}
+
+li.player-info-names {
+    background-color: rgba(25, 25, 25, 0.25);
+    font-size: 22px;
+    padding-left: 15px;
+    height: 30px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#player-info-right {
+    list-style: none;
+    width: 40%;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+li.player-info-values {
+    background-color: rgba(0,0,0, 0.25);
+    font-size: 22px;
+    height: 30px;
+    margin-bottom: 2px;
+    text-align: center;
+}
+
+#turn-container {
+    display: flex;
+    justify-content: center;
+    max-height: 10px;
+}
+
+h3.turn-id {
+    color: rgb(220, 220, 220);
+    font-family: "Montserrat";
+    font-size: 60px;
+    margin: 0;
+    padding: 0;
+}
+
+#got-container {
+    display: flex;
+}
+
+#got-list-left {
+    list-style: none;
+    width: 150px;
+    height: 50px;
+    padding-left: 15px;
+    margin: 0;
+}
+
+li.got-names {
+    color: #000000;
+}
+
+#got-list-right {
+    list-style: none;
+    width: 100px;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+#next-container {
+    align-items: center;
+}
+
+#next-list {
+    display: inline-block;
+    list-style: none;
+    width: 100%;
+    padding-left: 0;
+    margin: 0;
+}
+
+li.next-names {
+    background-color: rgba(25, 25, 25, 0.25);
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+#subgrid-container {
+    display: grid;
+    grid-template-areas: none;
+    /* background-color: #ff0000; */
+    height: 100%;
+    gap: 5px;
+    padding: 10px;
+    align-items: center;
+}
+
+#card-img {
+    transition: all 0.1s ease-in-out;
+}
+
+#card-img:hover {
+    transform: scale(1.2);
+}
+
+#guess-container {
+    display: none;
+    position: absolute;
+    width: 98%;
+    top: 70%;
+    text-align: center;
+}
+
+#played-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    background-color: #ff0000;
+}
+
+#played-card-container {
+    background-color: #ff7474;
+    width: 12%;
+    margin: 5px;
+}
+
+

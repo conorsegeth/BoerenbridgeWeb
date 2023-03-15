@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, abort
 from flask_socketio import SocketIO, join_room, leave_room
-from game import GameRoom, Player
+from game import GameRoom, Player, GameState
 import os
 
 SECRET_KEY = os.urandom(24)
@@ -36,7 +36,6 @@ def room(room_id):
 
 
 # SOCKET IO STUFF
-
 @socketio.on("create room")
 def create_game(data):
     room_id = data["room_id"]
@@ -120,22 +119,33 @@ def attempt_start(data):
     room_id = data["room_id"]
     username = data["username"]
 
+    # TODO: Send state info to client side
     if game_rooms[room_id].players[request.sid].is_admin == True:
+        state = game_rooms[room_id].start_game()
+        socketio.emit("update room", state.as_dict(), to=room_id)
         socketio.emit("start game", to=room_id)
-        game_rooms[room_id].start_game()
+        
     else:
         socketio.emit("not admin", to=request.sid)
 
 @socketio.on("player move")
 def player_move(data):
-    pass
+    room_id = data["room_id"]
+    guess = data["move"]  # Can be guess or card choice
+
+    state, valid = game_rooms[room_id].do_player_move(guess)
+    
+    if valid:
+        socketio.emit("update room", state.as_dict(), to=room_id)
+    else:
+        socketio.emit("update room", state.as_dict(), to=room_id)
+        socketio.emit("invalid move", to=request.sid)
 
 # Somehow make it recognised who disconnected and stop that game
 @socketio.on("bye")
 def handle_disconnect(data):
     room_id = data["room_id"]
     pass
-    
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host="0.0.0.0")
