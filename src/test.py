@@ -1,4 +1,9 @@
-bruh = {'conor': -8, "haley": 23, "papa": 45, "mama": 5}
+import random
 
-bruh = dict(sorted(bruh.items(), key=lambda item: item[1], reverse=True))
-print(bruh)
+if __name__ == '__main__':
+    nums = []
+    for i in range(15):
+        bruh = round(random.gauss(0, 1.2), 2)
+        nums.append(bruh)
+
+print(nums)

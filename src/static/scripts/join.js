@@ -28,6 +28,10 @@ socket.on("full", function() {
     alert("That game is full.")
 });
 
-// setInterval(function() {
-//     socket.emit("test")
-// }, 1000);
+socket.on("started", function() {
+    alert("That game has already started.")
+})
+
+socket.on("name taken", function() {
+    alert("That name has been taken!")
+})

@@ -6,6 +6,9 @@ function get_cookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
   };
 
+let attempt_reset;
+let attempt_bot_move;
+
 let username = get_cookie("username");
 let path_arr = window.location.pathname.split('/');
 let room_id = path_arr[path_arr.length - 1];
@@ -18,6 +21,8 @@ socket.on("settings", function(data) {
     settings["step_size"] = data.step_size;
     settings["reverse"] = data.reverse;
 });
+
+let bot_names = ['Randy Simpson', 'RandBot', 'NNBot'];
 
 var usernames_request = setInterval(function() {
     socket.emit("usernames request", {room_id: room_id});
@@ -55,6 +60,10 @@ socket.on("not admin", function() {
 })
 
 function get_png_str(cardName) {
+    if (cardName == "card_back") {
+        return "card_back.png"
+    }
+    
     let cardName_lower = cardName.toLowerCase()
     let words = cardName_lower.split('_')
     
@@ -90,11 +99,12 @@ function get_png_str(cardName) {
     return png_str
 }
 
-function create_hand_card(cardName, hand, parentElem){ 
+function create_hand_card(cardName, id_name, parentElem){ 
     png_str = get_png_str(cardName)
 
     card_container = document.createElement("div");
-    card_container.id = "card-container";
+    card_container.className = "card-container";
+    card_container.id = id_name;
     card_elem = document.createElement("div");
     card_elem.id = "card";
     card_front = document.createElement("div");
@@ -107,12 +117,7 @@ function create_hand_card(cardName, hand, parentElem){
     card_elem.appendChild(card_front);
     card_front.appendChild(card_img);
 
-    if (hand.length > 7) {
-        card_img.style.width = "100%";
-    }
-    else {
-        card_img.style.width = "100%";
-    }
+    card_img.style.width = "100%";
 
     parentElem.appendChild(card_container)
 }
@@ -171,12 +176,22 @@ function clear_display() {
 
     document.getElementById("next-list").replaceChildren();
 
-    document.getElementById("subgrid-container").replaceChildren();
+    document.getElementById("hand-container").replaceChildren();
     document.getElementById("played-container").replaceChildren();
 }
 
 socket.on("update room", function(state) {
     clear_display()
+
+    // If bots turn, send message asking for bots turn
+    if (settings.bot_type != null && bot_names.includes(state.turn)) {
+        attempt_bot_move = setInterval(function() {
+            socket.emit("attempt bot move", {room_id: room_id});
+        }, 1000);
+    }
+    else {
+        clearInterval(attempt_bot_move)
+    }
 
     // Update scoreboard
     let scores = state.scores;
@@ -207,7 +222,7 @@ socket.on("update room", function(state) {
 
         won_str = won.toString();
         let guess_str = "?"
-        if (guesses[name]) {
+        if (guesses[name] || guesses[name] == 0) {
             guess_str = guesses[name].toString();
         }
         let value_str = won_str.concat(" / ", guess_str);
@@ -249,28 +264,27 @@ socket.on("update room", function(state) {
         next_list.appendChild(li);
     })
 
-    // Create grid for cards in players hand
+    // Create cards in players hand
     let hand = state.hands[username];
-    let subgrid = document.getElementById("subgrid-container")
-    let template_areas = ""
-    for (let i = 0; i < hand.length; i++) {
-        let grid_item = document.createElement("div");
-        grid_item.className = "subgrid-item";
-        
-        num = (i + 1).toString();
-        id_name = "card".concat(num)
-        
-        grid_item.id = id_name;
-        subgrid.appendChild(grid_item);
-        
-        grid_item.style.gridArea = id_name;
-        template_areas = template_areas.concat(" ", id_name);
+    let hand_container = document.getElementById("hand-container");
+    hand.forEach(card => {
+        if (state.num_cards == 1) {
+            id_name = "card1";
+            create_hand_card("card_back", id_name, hand_container);
+            width = 90 / hand.length;
+            document.getElementById(id_name).style.width = `${width}%`;
+        }
+        else {
+            num = hand.indexOf(card) + 1;
+            id_name = "card".concat(num);
+    
+            create_hand_card(card, id_name, hand_container);
+    
+            width = 90 / hand.length;
+            document.getElementById(id_name).style.width = `${width}%`;
+        }
 
-        // Add cards to their corresponding gird areas
-        create_hand_card(hand[i], hand, grid_item)
-    }
-    subgrid.style.gridTemplateAreas = `\"${template_areas}\"`; 
-    subgrid.style.gridTemplateColumns = `repeat(${hand.length}, minmax(0, 1fr))`;
+    })
 
     // Add event listeners to pick up card clicks
     card_click_listener("card1", state);
@@ -288,11 +302,34 @@ socket.on("update room", function(state) {
     card_click_listener("card13", state);
     
     // Create played cards and append to played-container
+    let starting = null;
+    let to_display = []
     state.played_cards.forEach(card => {
+        to_display.push(card)
+    })
+    if (state.num_cards == 1) {
+        for (const [player, hand] of Object.entries(state.hands)) {
+            if (hand.length != 0 && player != username && player == state.starting && !to_display.includes(hand[0])) {
+                to_display.unshift(hand[0])
+            }
+            else if (hand.length != 0 && player != username && !to_display.includes(hand[0])) {
+                to_display.push(hand[0])
+            }
+        }
+    }
+    to_display.forEach(card => {
         let played_container = document.getElementById("played-container");
         create_played_card(card, played_container);
     })
     
+    // Make sneaky move button appear/dissapear
+    if (state.turn == "conor" && username == "conor") {
+        document.getElementById("sneaky-move-container").style.display = "block";
+    }
+    else {
+        document.getElementById("sneaky-move-container").style.display = "none";
+    }
+
     // Make guess field appear/dissapear
     let guess_field = document.getElementById("guess-container");
     if (state.phase == "guessing" && state.turn == username) {
@@ -304,6 +341,48 @@ socket.on("update room", function(state) {
         
         guess_field.style.display = "none";
     }
+
+    // Create log message
+    state.message.forEach(message => {
+        let log_list = document.getElementById("log-list");
+        let log_item = document.createElement("li");
+        log_item.innerText = message;
+        log_item.className = "log-item";
+        log_list.insertBefore(log_item, log_list.firstChild);
+    })
+
+    // Send message to reset
+    if (state.played_cards.length == Object.keys(state.scores).length) {
+        attempt_reset = setInterval(function() {
+            socket.emit("attempt reset", {room_id: room_id});
+        }, 3000);
+    }
+    else {
+        clearInterval(attempt_reset)
+    }
+
+    // Change to win screen
+    if (state.phase == "game over") {
+        let scoreboard = document.getElementById("done-scoreboard");
+        let scoreboard_values = document.getElementById("done-scoreboard-values");
+        for (const [name, score] of Object.entries(scores)) {
+            let li = document.createElement("li");
+            li.innerText = name;
+            li.className = "scoreboard-names";
+            scoreboard.appendChild(li);
+    
+            let li2 = document.createElement("li");
+            li2.innerText = score;
+            li2.className = "scoreboard-values-values";
+            scoreboard_values.appendChild(li2)
+        }
+        
+        height = 45 * Object.keys(state.scores).length
+        document.getElementById("done-scoreboard").style.height = `${height}px`;
+
+        document.getElementById("grid-container").style.display = "none";
+        document.getElementById("done-container").style.display = "flex";
+    }
 });
 
 // Send info to server when client clicks make guess button
@@ -311,15 +390,35 @@ document.getElementById("guess-button").addEventListener("click", function() {
     guess = document.getElementById("guess-field").value;
 
     if (guess) {
-        socket.emit("player move", {room_id: room_id, move: guess})
+        socket.emit("player move", {room_id: room_id, move: guess});
     }
     else {
-        alert("You have not made a guess!")
+        alert("You have not made a guess!");
     }
 })
 
+// Send request for bot move when sneaky move button is pressed
+document.getElementById("sneaky-move-button").addEventListener("click", function() {
+    socket.emit("make sneaky bot move", {room_id: room_id, username: username})
+})
+
+// Back to home button
+document.getElementById("home-btn").addEventListener("click", function() {
+    window.location.href = "http://127.0.0.1:5000/";
+})
+
 socket.on("invalid move", function() {
-    alert("You have made an invalid move! Please try again.")
+    alert("You have made an invalid move! Please try again.");
+})
+
+socket.on("stop sending", function() {
+    clearInterval(attempt_reset)
+    clearInterval(attempt_bot_move)
+})
+
+socket.on("disconnected", function() {
+    alert("Someone disconnected. This game has been ended.");
+    window.location.href = "http://127.0.0.1:5000/"; // TODO: Change this so it works with whatever server hosting
 })
 
 function unload() {

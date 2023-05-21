@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, abort
 from flask_socketio import SocketIO, join_room, leave_room
-from game import GameRoom, Player, GameState
+from game import GameRoom, Player
+from bots import RandBot, RandomSearchBot, NNBot
 import os
 
 SECRET_KEY = os.urandom(24)
@@ -39,6 +40,12 @@ def room(room_id):
 @socketio.on("create room")
 def create_game(data):
     room_id = data["room_id"]
+
+    # Check if room id has spaces
+    if len(room_id.split(" ")) > 1:
+        socketio.emit("no spaces", to=request.sid)
+        return
+
     max_players = int(data["max_players"])
     bot_type = None if data["bot_type"] == "None" else data["bot_type"]
     step_size = data["step_size"]
@@ -56,6 +63,14 @@ def create_game(data):
         "step_size": step_size,
         "reverse": reverse
         })
+    
+    if bot_type == 'NNBot':
+        room.add_player(NNBot("NNBot", 2))
+    elif bot_type == 'RSBot':
+        room.add_player(RandomSearchBot("Randy Simpson", 2, 100, 15))
+    elif bot_type == "rand":
+        room.add_player(RandBot("RandBot", 2))
+
     game_rooms[room_id] = room
     
     if exists:
@@ -66,15 +81,27 @@ def create_game(data):
 @socketio.on("join room")
 def join_game(data):
     room_id = data["room_id"]
+    username = data["username"]
 
     # Check if room exists
-    exists = False
-    for room in game_rooms:
-        if room == room_id:
-            if len(game_rooms[room].players) >= game_rooms[room].settings["max_players"]:
-                socketio.emit("full", to=request.sid)
-                return
-            exists = True
+    exists = True if room_id in game_rooms else False
+
+    name_taken = False
+    if exists:
+        for id in game_rooms[room_id].players:
+            if game_rooms[room_id].players[id].username == username:
+                name_taken = True
+        if name_taken:
+            socketio.emit("name taken", to=request.sid)
+            return
+
+    if exists and len(game_rooms[room_id].players) >= game_rooms[room_id].settings["max_players"]:
+        socketio.emit("full", to=request.sid)
+        return
+
+    elif exists and game_rooms[room_id].started == True:
+        socketio.emit("started", to=request.sid)
+        return
     
     if exists:
         socketio.emit("exists", to=request.sid)
@@ -86,8 +113,9 @@ def handle_join(data):
     room_id = data["room_id"]
     username = data["username"]
 
+    bot_names = ["RandBot", "Randy Simpson", "NNBot"]
     room = game_rooms[room_id]
-    if len(room.players) == 0:
+    if len(room.players) == 0 or (len(room.players) == 1 and list(room.players.values())[0].username in bot_names):
         player = Player(request.sid, username, 1, is_admin=True)
     else:
         player = Player(request.sid, username, len(room.players) + 1)
@@ -119,7 +147,6 @@ def attempt_start(data):
     room_id = data["room_id"]
     username = data["username"]
 
-    # TODO: Send state info to client side
     if game_rooms[room_id].players[request.sid].is_admin == True:
         state = game_rooms[room_id].start_game()
         socketio.emit("update room", state.as_dict(), to=room_id)
@@ -131,9 +158,12 @@ def attempt_start(data):
 @socketio.on("player move")
 def player_move(data):
     room_id = data["room_id"]
-    guess = data["move"]  # Can be guess or card choice
+    move = data["move"]  # Can be guess or card choice
 
-    state, valid = game_rooms[room_id].do_player_move(guess)
+    if move.isdigit():
+        move = int(move)
+
+    state, valid = game_rooms[room_id].do_player_move(move)
     
     if valid:
         socketio.emit("update room", state.as_dict(), to=room_id)
@@ -141,11 +171,53 @@ def player_move(data):
         socketio.emit("update room", state.as_dict(), to=room_id)
         socketio.emit("invalid move", to=request.sid)
 
-# Somehow make it recognised who disconnected and stop that game
+@socketio.on("attempt bot move")
+def attempt_bot_move(data):
+    room_id = data["room_id"]
+
+    if game_rooms[room_id].players[request.sid].is_admin:
+        socketio.emit("stop sending", to=room_id)
+
+        engine = game_rooms[room_id].engine
+        bot = engine.state.get_player_from_turn()
+        move = bot.get_move(engine.get_player_perspective(bot, engine.state))
+        new_state, valid = game_rooms[room_id].do_player_move(move)
+
+        socketio.emit("update room", new_state.as_dict(), to=room_id)
+
+@socketio.on("make sneaky bot move")
+def make_sneaky_bot_move(data):
+    room_id = data["room_id"]
+    username = data["username"]
+
+    room = game_rooms[room_id]
+    engine = room.engine
+    
+    bot = NNBot(username, 0)
+    bot.give_hand(room.get_player_from_sid(request.sid).hand)
+
+    move = bot.get_move(engine.get_player_perspective(room.get_player_from_sid(request.sid), engine.state))
+    new_state, valid = room.do_player_move(move)
+
+    socketio.emit("update room", new_state.as_dict(), to=room_id)
+
+@socketio.on("attempt reset")
+def attempt_reset(data):
+    room_id = data["room_id"]
+    
+    if game_rooms[room_id].players[request.sid].is_admin:
+        state, valid = game_rooms[room_id].do_player_move(None)
+        socketio.emit("update room", state.as_dict(), to=room_id)
+
 @socketio.on("bye")
 def handle_disconnect(data):
     room_id = data["room_id"]
-    pass
+    socketio.emit("disconnected", to=room_id)
+    
+    leave_room(room_id)
+    
+    if game_rooms[room_id].players[request.sid].is_admin:
+        del game_rooms[room_id]
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host="0.0.0.0")
+    socketio.run(app, host="0.0.0.0")

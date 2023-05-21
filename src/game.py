@@ -1,10 +1,9 @@
 from collections.abc import Iterable
 from enum import Enum
 import random
+from copy import deepcopy
 from math import floor
-import time
 
-random.seed(1)
 
 class Suit(Enum):
     DIAMONDS = 1
@@ -32,13 +31,15 @@ class Card:
     def __init__(self, value: Value, suit: Suit) -> None:
         self.value = value
         self.suit = suit
-    
+
     def __repr__(self) -> str:
-        return str(self.value.name + " of " + self.suit.name)
+        val = self.value.name[:1] + self.value.name[1:].lower()
+        suit = self.suit.name[:1] + self.suit.name[1:].lower()
+        return str(val + " of " + suit)
     
     def get_name(self) -> str:
         return f"{self.value.name}_{self.suit.name}"
-    
+
     def get_suit(self) -> Suit:
         if self.value == Value.JACK and self.suit == Suit.CLUBS:
             return Suit.SPADES
@@ -49,6 +50,7 @@ class Card:
 class Deck:
     def __init__(self) -> None:
         self.deck_lst = [Card(val, suit) for suit in (Suit) for val in (Value)]
+        self.card_names = [card.get_name for card in self.deck_lst]
     
     def shuffle(self) -> None:
         random.shuffle(self.deck_lst)
@@ -73,45 +75,45 @@ class Player:
     def give_hand(self, hand: Iterable[Card]) -> None:
         self.hand = hand
 
-
-class Bot(Player):
-    def __init__(self, username: str, player_number: int, session_id=None) -> None:
-        super().__init__(session_id, username, player_number)
+    def is_bot(self) -> bool:
+        return False
+    
+    def get_move(self, perspective):
+        pass
 
 
 class GameState:
     def __init__(self, players: Iterable[Player], settings: dict) -> None:
-        self.players = players
+        self.players = [None for player in players]
+        for player in players:
+            self.players[player.player_number - 1] = player
         self.num_players = len(self.players)
+        
         self.settings = settings
+        if self.settings:
+            self.settings["step_size"] = int(self.settings["step_size"])
+        
         self.phase = "guessing"
+        
         self.guesses = {}
         self.won_tricks = {player: 0 for player in self.players}
         self.scores = {player: 0 for player in self.players}
-        self.played_cards = {}
+        
         self.leader_move = None
+        self.played_cards = {}
+        self.seen_cards = []
+        
         self.player_turn = 1
         self.next_up = [player for player in self.players if player.player_number != self.player_turn]
         self.next_starting_turn = 2
-
-        # TODO: Add bot to player list if bot type is specified
-        if settings["bot_type"] is not None:
-            self.num_players += 1
-            pass
-            
-        # Deal initial cards to all players (max 13)
-        deck = Deck()
-        deck.shuffle()
-        if self.num_players < 4:
-            self.num_cards = 13
-        else:
-            self.num_cards = floor(len(self.deck.deck_lst) / self.num_players)
         
-        for player in self.players:
-            player.give_hand(deck.deal_cards(self.num_cards)) 
+        self.ones_rounds = 0
+        self.starting = None
+        
+        self.message = ["Game has started!"]
         
     def __repr__(self) -> str:
-        state_str = f"Deck: {self.deck.deck_lst}\n Players: {self.players}\n Hand: {self.players[0].hand}\n Phase: {self.phase}\n Guesses: {self.guesses}\n Won Tricks: {self.won_tricks}\n Scores: {self.scores}\n Turn: {self.player_turn}, Next starting turn: {self.next_starting_turn}"
+        state_str = f"Players: {self.players}\n Hand: {self.players[0].hand}\n Phase: {self.phase}\n Guesses: {self.guesses}\n Won Tricks: {self.won_tricks}\n Scores: {self.scores}\n Turn: {self.player_turn}, Next starting turn: {self.next_starting_turn}"
         return state_str
     
     def get_player_from_turn(self) -> Player:
@@ -121,11 +123,13 @@ class GameState:
 
     def populate_next_up(self) -> None:
         self.next_up.clear()
-        for i in range(len(self.players)):
-            i += 1
-            if i > len(self.players):
-                i = 1
-        self.next_up.append(self.players[self.player_turn + i])
+        idx = self.player_turn - 1
+        for i in range(len(self.players) - 1):
+            idx += 1
+            if idx > len(self.players) - 1:
+                idx = 0
+
+            self.next_up.append(self.players[idx])
 
     def increment_turn(self) -> None:
         self.player_turn += 1
@@ -134,8 +138,6 @@ class GameState:
 
         if self.next_up:
             self.next_up.pop(0)
-
-        #TODO: Add something to add players back to next_up list
 
     def trick_reset(self, new_leader) -> None:
         self.player_turn = new_leader.player_number
@@ -154,17 +156,46 @@ class GameState:
         # Switch phase back to guessing
         self.phase = "guessing"
 
-        # Deal new cards
-        deck = Deck()
-        deck.shuffle()
-        self.num_cards -= int(self.settings["step_size"])
+        # End game if cards are already at 13
+        if self.num_cards == 13 and self.ones_rounds == self.num_players:
+            self.phase = "game over"
+
+        # Add to ones count
+        if self.num_cards == 1:
+            self.ones_rounds += 1
+
+        # Reverse step size if reverse setting is true
+        if self.ones_rounds == self.num_players and self.settings["reverse"] == True and self.settings["step_size"] > 0:
+            self.settings["step_size"] *= -1
+
+        # Change number of cards
+        self.num_cards -= self.settings["step_size"]
         if self.num_cards < 1:
             self.num_cards = 1
-        for player in self.players:
-            player.give_hand(deck.deal_cards(self.num_cards))
+        elif self.num_cards > 13:
+            self.num_cards = 13
         
-        # Clear already played cards
+        # Set starting turn (to organise cards) if there is 1 card
+        if self.num_cards == 1:
+            self.starting = self.player_turn
+
+        # End game if there are not enough cards to deal to all players
+        if self.num_cards * self.num_players > 52:
+            self.phase = "game over"
+        else:
+            # Deal new cards
+            deck = Deck()
+            deck.shuffle()
+            for player in self.players:
+                player.give_hand(deck.deal_cards(self.num_cards))
+        
+        # Handle game over if ones rounds complete & no reverse
+        if self.ones_rounds == self.num_players and self.settings["reverse"] == False:
+            self.phase = "game over"
+
+        # Clear already played cards and seen cards
         self.played_cards.clear()
+        self.seen_cards.clear()
         
         # Set leader move back to None
         self.leader_move = None
@@ -175,7 +206,6 @@ class GameState:
 
         # Populate next up list
         self.populate_next_up()
-
 
     # Could definitely be more efficient
     def as_dict(self) -> dict:
@@ -196,6 +226,7 @@ class GameState:
             won_dict[player.username] = self.won_tricks[player]
         state_dict["won_tricks"] = won_dict
 
+        state_dict["turn"] = None
         for player in self.players:
             if player.player_number == self.player_turn:
                 state_dict["turn"] = player.username
@@ -220,8 +251,90 @@ class GameState:
         state_dict["played_cards"] = played_list
 
         state_dict["phase"] = self.phase
-        
+
+        state_dict["num_cards"] = self.num_cards
+
+        state_dict["starting"] = None
+        for player in self.players:
+            if player.player_number == self.starting:
+                state_dict["starting"] = player.username
+
+        state_dict["message"] = self.message
+
         return state_dict
+
+
+class PlayerPerspective():
+    def __init__(self, player: Player, state: GameState) -> None:
+        self.settings = state.settings
+
+        self.player_name = player.username
+        self.player_hand = player.hand
+
+        self.num_players = state.num_players
+        self.player_numbers = {player.username: player.player_number for player in state.players}
+        self.hand_lengths = {player.username: len(player.hand) for player in state.players}
+
+        self.phase = state.phase
+
+        self.num_cards = state.num_cards
+
+        self.guesses = {player.username: state.guesses[player] for player in state.guesses}
+        self.won_tricks = {player.username: state.won_tricks[player] for player in state.won_tricks}
+        self.scores = {player.username: state.scores[player] for player in state.scores}
+
+        self.leader_move = state.leader_move
+        self.played_cards = {card: state.played_cards[card].username for card in state.played_cards}
+        self.seen_cards = state.seen_cards
+
+        self.player_turn = state.player_turn
+        self.next_starting_turn = state.next_starting_turn
+
+        self.ones_rounds = state.ones_rounds
+
+    def _remove_seen_cards(self, deck: Deck, seen_cards: Iterable[Card]) -> Deck:
+        for card in deck.deck_lst[:]:
+            for seen_card in seen_cards:
+                if seen_card.get_name() == card.get_name():
+                    deck.deck_lst.remove(card)
+        return deck
+
+    def generate_determinization(self) -> GameState:
+        deck = Deck()
+        deck = self._remove_seen_cards(deck, self.seen_cards + self.player_hand)
+        deck.shuffle()
+        
+        players = []
+        for player_name in self.player_numbers:
+            player = Player(None, player_name, self.player_numbers[player_name])
+            if player.username == self.player_name:
+                player.give_hand(deepcopy(self.player_hand))
+            else:
+                player.give_hand(deck.deal_cards(self.hand_lengths[player_name]))
+            players.append(player)
+
+        # Don't know if all these deepcopies are needed but ah well
+        # It is needed for seen_cards, DONT REMOVE
+
+        state = GameState(players, self.settings)
+        state.phase = deepcopy(self.phase)
+        state.num_cards = deepcopy(self.num_cards)
+        state.guesses = {player: self.guesses[player.username] for player in state.players if player.username in self.guesses}
+        state.won_tricks = {player: self.won_tricks[player.username] for player in state.players}
+        state.scores = {player: self.scores[player.username] for player in state.players}
+        state.leader_move = self.leader_move
+        
+        for card in self.played_cards:
+            for player in state.players:
+                if player.username == self.played_cards[card]:
+                    state.played_cards[card] = player
+        
+        state.seen_cards = deepcopy(self.seen_cards)
+        state.player_turn = deepcopy(self.player_turn)
+        state.next_starting_turn = deepcopy(self.next_starting_turn)
+        state.ones_rounds = deepcopy(self.ones_rounds)
+
+        return state
 
 
 class RuleChecker:
@@ -236,18 +349,16 @@ class RuleChecker:
         
         return True
     
-    def is_valid_move(self, move, state):
-        if not state.leader_move:
+    def is_valid_move(self, move: Card, hand: Iterable[Card], leader_move: Card) -> bool:
+        if not leader_move:
             return True
-        
-        current_player = state.get_player_from_turn()
 
         can_follow_suit = False
-        for card in current_player.hand:
-            if card.get_suit() == state.leader_move.get_suit():
+        for card in hand:
+            if card.get_suit() == leader_move.get_suit():
                 can_follow_suit = True
 
-        if move.get_suit() == state.leader_move.get_suit():
+        if move.get_suit() == leader_move.get_suit():
             return True
         
         if can_follow_suit == False:
@@ -272,7 +383,6 @@ class Scorer:
         winner = leader_card
 
         for card in played_cards:
-            print(card)
             # Return jack of clubs if it is played
             if card.value == Value.JACK and card.suit == Suit.CLUBS:
                 return card
@@ -311,13 +421,13 @@ class Scorer:
                 points = -1 * abs(guess - won)
                 new_scores[player] = score + points
 
-        new_scores = dict(sorted(new_scores.items, key=lambda item: item[1], reverse=True))
+        new_scores = dict(sorted(new_scores.items(), key=lambda item: item[1], reverse=True))
         return new_scores
 
 
 class GameEngine: 
-    def __init__(self, players: Iterable[Player], settings: dict) -> None:
-        self.state = GameState(players, settings)
+    def __init__(self, state: GameState) -> None:
+        self.state = state
         self.rule_checker = RuleChecker()
         self.scorer = Scorer()
 
@@ -332,32 +442,91 @@ class GameEngine:
         
         return False
 
-    def play_step(self, move) -> GameState:
-        if self.state.phase == "guessing":
-            if move.isdigit():
-                move = int(move)
-                final_guess = True if len(self.state.guesses) == len(self.state.players) - 1 else False
-                
-                if self.rule_checker.is_valid_guess(move, self.state):  
-                    current_player = self.state.get_player_from_turn()
-                    self.state.guesses[current_player] = move
+    def deal_initial_cards(self) -> None:
+        deck = Deck()
+        deck.shuffle()
 
-                    self.state.increment_turn()
-
-                    if final_guess:
-                        self.state.phase = "playing"
-
-                    return self.state, True    
+        if self.state.num_players < 4:
+            self.state.num_cards = 13
         else:
+            self.state.num_cards = floor(len(deck.deck_lst) / self.state.num_players)
+
+        for player in self.state.players:
+            player.give_hand(deck.deal_cards(self.state.num_cards)) 
+
+    def get_player_perspective(self, player: Player, state: GameState) -> PlayerPerspective:
+        return PlayerPerspective(player, state)
+
+    def play_step(self, move: Card | int) -> GameState:
+        if self.state.phase == "guessing":
+            final_guess = True if len(self.state.guesses) == len(self.state.players) - 1 else False
+            
+            if self.rule_checker.is_valid_guess(move, self.state):  
+                current_player = self.state.get_player_from_turn()
+                self.state.guesses[current_player] = move
+
+                self.state.increment_turn()
+
+                if final_guess:
+                    self.state.phase = "playing"
+                    self.state.populate_next_up()
+
+                self.state.message = [f"{current_player.username} guessed {move}."]
+
+                return self.state, True
+        else:
+            # Handle trick or game reset when move is None
+            if move == None:
+                if self.state.players[0].hand:
+                    winning_card = self.scorer.get_winning_card(self.state.played_cards, self.state.leader_move)
+                    trick_winner = self.state.played_cards[winning_card]
+                    
+                    self.state.message = [f"{trick_winner.username} won with the {winning_card}"]
+                    
+                    self.state.trick_reset(trick_winner)
+                else:
+                    old_scores = self.state.scores.copy()
+
+                    scores = self.scorer.calculate_points(self.state.guesses, self.state.won_tricks, self.state.scores)
+                    self.state.scores = scores         
+                    
+                    winning_card = self.scorer.get_winning_card(self.state.played_cards, self.state.leader_move)
+                    trick_winner = self.state.played_cards[winning_card]
+
+                    low_name = 'low_name'
+                    high_name = 'high_name'
+                    highest = -999
+                    lowest = 999
+                    for player in self.state.scores:
+                        points = self.state.scores[player] - old_scores[player]
+                        if points > highest: 
+                            highest = points
+                            high_name = player.username
+                        elif points < lowest:
+                            lowest = points
+                            low_name = player.username
+                    if random.random() > 0.5:
+                        self.state.message = [f"{trick_winner.username} won with the {winning_card}", f"{high_name} got the most points, going up by {highest}!"]
+                    else:
+                        self.state.message = [f"{trick_winner.username} won with the {winning_card}", f"{low_name} lost the most points, losing {abs(lowest)} :("]
+
+                    self.state.game_reset()
+
+                return self.state, True
+
+            # Convert move to str if it is not already
+            if isinstance(move, Card):
+                move = move.get_name()
+
             move = move.split("_")
             move = Card(Value[move[0]], Suit[move[1]])
-            
-            first_move = True if len(self.state.played_cards) == 0 else False
-            final_move_trick = True if len(self.state.played_cards) == len(self.state.players) - 1 else False
 
-            if self.rule_checker.is_valid_move(move, self.state):
+            first_move = True if len(self.state.played_cards) == 0 else False
+
+            if self.rule_checker.is_valid_move(move, self.state.get_player_from_turn().hand, self.state.leader_move):
                 current_player = self.state.get_player_from_turn()
                 self.state.played_cards[move] = current_player
+                self.state.seen_cards.append(move)
 
                 if first_move:
                     self.state.leader_move = move
@@ -369,22 +538,20 @@ class GameEngine:
 
                 self.state.increment_turn()
                 
+                final_move_trick = True if len(self.state.played_cards) == len(self.state.players) else False
                 if final_move_trick:
                     winning_card = self.scorer.get_winning_card(self.state.played_cards, self.state.leader_move)
                     trick_winner = self.state.played_cards[winning_card]
-                    self.state.won_tricks[trick_winner] += 1
-                    self.state.trick_reset(trick_winner)
 
-                final_move_game = self.is_final_move_game()
-                if final_move_game:
-                    scores = self.scorer.calculate_points(self.state.guesses, self.state.won_tricks, self.state.scores)
-                    self.state.scores = scores
-                    self.state.game_reset()
+                    self.state.won_tricks[trick_winner] += 1
+
+                    self.state.player_turn = 999
+                
+                self.state.message = [f"{current_player.username} played the {move}."]
 
                 return self.state, True
         
         return self.state, False
-
 
 
 class GameRoom:
@@ -392,7 +559,7 @@ class GameRoom:
         self.room_id = room_id
         self.players = {}
         self.settings = settings
-        self.state = "waiting for players"
+        self.started = False
 
     def add_player(self, player: Player) -> None:
         self.players[player.session_id] = player
@@ -405,26 +572,20 @@ class GameRoom:
         for playerID in self.players:
             user_ids.append(playerID)
         return user_ids
+
+    def get_player_from_sid(self, sid) -> Player:
+        return self.players[sid]
     
     def start_game(self) -> GameState:
+        self.started = True
         players_lst = [self.players[sid] for sid in self.players]
-        self.engine = GameEngine(players_lst, self.settings)
+        state = GameState(players_lst, self.settings)
+        self.engine = GameEngine(state)
+        self.engine.deal_initial_cards()
         return self.engine.state
 
     def do_player_move(self, move) -> GameState:
         return self.engine.play_step(move)
 
 if __name__ == '__main__':
-    deck = Deck()
-    players = []
-    for i in range(4):
-        players.append(Player(None, f"player{i + 1}", i + 1))
-    settings = {
-        'max_players': len(players),
-        'bot_type': None,
-        'step_size': 1,
-        'reverse': False}
-
-    engine = GameEngine()
-
-    game_state = GameState(deck, players, settings)
+    pass

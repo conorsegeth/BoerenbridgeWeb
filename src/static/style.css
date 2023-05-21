@@ -228,6 +228,7 @@ li.player-list-items {
 #item5 { grid-area: leaderboard; padding: 20px 0;}
 #item6 { grid-area: cards; }
 #item7 { grid-area: got; padding: 20px 0;}
+#item8 { grid-area: log; }
 
 #grid-container {
     display: none;
@@ -235,20 +236,20 @@ li.player-list-items {
     grid-template-areas: 
         'player_info turn turn turn turn next_up'
         'player_info played_cards played_cards played_cards played_cards next_up'
-        'leaderboard played_cards played_cards played_cards played_cards next_up'
+        'leaderboard played_cards played_cards played_cards played_cards log'
         'leaderboard cards cards cards cards got';
     grid-template-columns: 16% 16% 16% 16% 16% 16%;
     grid-template-rows: 24% 24% 24% 24%;
     gap: 10px;
     padding: 10px;
-    background-color: #0000FF;
+    /* background-color: #0000FF; */
     justify-content: space-evenly;
 }
 
 .grid-item {
     padding: 0 0;
     font-size: 30px;
-    background-color: #87CEEB;
+    /* background-color: #87CEEB; */
 }
 
 h3 {
@@ -404,14 +405,33 @@ li.next-names {
 }
 
 
-#subgrid-container {
+/* #subgrid-container {
     display: grid;
     grid-template-areas: none;
-    /* background-color: #ff0000; */
+    background-color: #ff0000;
     height: 100%;
     gap: 5px;
     padding: 10px;
     align-items: center;
+} */
+
+/* .subgrid-item {
+    background-color: #35654d;
+} */
+
+#hand-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    /* background-color: #ff0000; */
+}
+
+.card-container {
+    /* background-color: #ff6464; */
+    margin: 2px;
+    max-width: 6vw;
 }
 
 #card-img {
@@ -436,13 +456,70 @@ li.next-names {
     justify-content: center;
     align-items: center;
     height: 100%;
-    background-color: #ff0000;
 }
 
 #played-card-container {
-    background-color: #ff7474;
     width: 12%;
     margin: 5px;
 }
 
+#log-container {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    /* white-space: nowrap; */
+    overflow: hidden;
+}
 
+#log-list {
+    list-style: none;
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.log-item {
+    font-size: 18px;
+    text-align: center;
+}
+
+#done-container {
+    display: none;
+    flex-direction: column;
+    height: 96vh;
+    align-items: center;
+    justify-content: center;
+}
+
+#done-scoreboard-container {
+    display: flex;
+    width: 40%;
+    margin-bottom: 10px;
+}
+
+#done-scoreboard {
+    list-style: none;
+    width: 75%;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+}
+
+
+#done-scoreboard-values {
+    list-style: none;
+    width: 25%;
+    height: 50px;
+    padding: 0;
+    margin: 0;
+}
+
+#sneaky-move-container {
+    display: none;
+    position: absolute;
+    left: 1640px;
+    bottom: 80px;
+}
