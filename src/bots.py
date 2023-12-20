@@ -132,30 +132,6 @@ class RandomSearchBot(Bot):
         best_move = None
         best_score = float('inf')
         for move in self.get_valid_moves(perspective):
-            # Generate regression data
-            # data = [0 for i in range(26)]
-
-            # my_guess = None
-            # for name in perspective.guesses:
-            #     if self.username == name:
-            #         my_guess = perspective.guesses[name]
-            # my_won = None
-            # for name in perspective.won_tricks:
-            #     if self.username == name:
-            #         my_won = perspective.won_tricks[name]
-            # data[0] = move
-            # for i, card in enumerate(self.hand):
-            #     data[i + 1] = card
-            # if isinstance(move, int):
-            #     data[14] = move
-            # else:
-            #     data[14] = my_guess
-            # data[15] = my_won
-            # data[16] = perspective.num_players
-            # for i, card in enumerate(perspective.played_cards):
-            #     data[i + 17] = card
-            # data[24] = perspective.leader_move
-            
             total_score = 0
             for i in range(self.num_simulations):
                 state = perspective.generate_determinization()
